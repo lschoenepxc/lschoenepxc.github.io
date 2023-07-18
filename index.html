@@ -47,6 +47,53 @@
 <script type="text/javascript">
     `use strict`;
 
+    var worker = new Worker('workerReduction.js');
+
+    worker.onmessage = function(e) {
+        const file = e.data.blob;
+        if (file !== undefined) {
+            const s_name = SIMPLIFY_FILE.simplify_name;
+            file.name = s_name;
+
+            waitForReduction(file);
+
+            put_status("Ready to download");
+            return;
+        }
+
+        console.error("Unknown Message from WebWorker", e.data);
+    }
+
+    worker.onerror = function(e) {
+        console.log(e);
+        console.log(
+            'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message
+        );
+    }
+
+    let SIMPLIFY_FILE = {
+        'blob': undefined,
+        get name(){
+            if (this.exists)
+                return this.blob.name;
+        },
+        get simplify_name() {
+            if (this.exists)
+                return "simplify_"+this.name;
+        },
+        get size() {
+            if (this.exists)
+                return this.blob.size;
+        },
+        get exists() {
+            if (this.blob)
+                return true;
+            else {
+                return false;
+            }
+        }
+    }
+
     let GLOBAL = {
         color : [150, 150, 150, 1],
         get color_str() {
@@ -99,29 +146,41 @@
             this.value = null;
         }
 
-        check_file(file, function(){check_file_success()});
+        // Reduction --> 
+        if (file === undefined) // not via upload button defined otherwise
+            file = SIMPLIFY_FILE.blob;
 
-        function check_file_success() {
+        var uploadform = document.getElementById("fileuploadform");
+        console.log(uploadform);
+        uploadform.files[0] = file;
 
-            put_status("Converting by your browser");
+        SIMPLIFY_FILE.blob = file;
+        // const percentTo8MB = 0.99;
+        if (SIMPLIFY_FILE.size > 8*1024*1024) {
+            check_file_Reduction(post_to_worker);
+        }
+        else{
+            waitForReduction(file);
+        }
+        
+        // <-- Reduction
+    }
 
-            var uploadform = document.getElementById("fileuploadform");
-            var filename = file.name;
-            var fr = new FileReader();
-            fr.readAsDataURL(file);
+    function waitForReduction(file){
+            // now using reducted stl-file
+            check_file(file, function(){check_file_success()});
 
-            fr.onload = function (){
+            function check_file_success() {
+
+                put_status("Converting by your browser");
+
+                var filename = file.name;
+                var fr = new FileReader();
+                fr.readAsDataURL(file);
+
+                fr.onload = function (){
 
                 console.log(filename);
-
-                if (filename === GLOBAL.stl_name) { // user upload the same file as last one
-                    console.log("same stl file");
-                    download_glb();
-                    return;
-                } else if (GLOBAL.stl_name !== undefined) { // not same file rm old file
-                    console.log("new filename ", filename, "unlink", GLOBAL.stl_name);
-                    Module['FS_unlink'](GLOBAL.stl_name);
-                }
 
                 var stl_name = filename;
 
@@ -129,9 +188,9 @@
                 Module['FS_createDataFile'](".", stl_name, data, true, true);
 
                 Module.ccall("make_bin", // c function name
-                        undefined, // return
-                        ["string"], // param
-                        [stl_name]
+                    undefined, // return
+                    ["string"], // param
+                    [stl_name]
                 );
 
                 // Using a file to output data from c++ to js
@@ -237,8 +296,8 @@
                             color_b,
                             1
                             ],
-                        "metallicFactor": 1,
-                        "roughnessFactor": 1
+                        "metallicFactor": 0,
+                        "roughnessFactor": 1100
                     }
                 }
             ],
@@ -342,6 +401,7 @@
         download_button.disabled = false;
         download_button.innerHTML = "Click to Download " + glb_name;
         // download_button.click();
+        reductionURL = "";
 
         if (blob.size < 3145728) {
             put_status("Success, you can now view it in 3D!")
@@ -350,15 +410,40 @@
         }
     }
 
+    function get_value_from_slider() {
+        return document.getElementById('slider').valueAsNumber;
+    }
+
     function check_file(file, success_cb) {
         put_status("Checking file");
-        const filename = file.name;
+        success_cb();
+    }
+
+    function check_file_Reduction(success_cb) {
+        put_status("Checking file");
+        const filename = SIMPLIFY_FILE.name;
         const extension = filename.toLowerCase().slice(filename.lastIndexOf(".")+1, filename.length);
-        if (extension!=="stl") {
-            put_status("Please upload an stl file not "+ extension);
+        if (extension!=="stl" && extension!=="obj") {
+            put_status("Please upload an stl or obj file not "+ extension);
             return;
         }
         success_cb();
+    }
+
+    function post_to_worker() {
+        put_status("Simplifying by your browser...See log below");
+        // const percentTo8MB = 0.99;
+        // if (SIMPLIFY_FILE.exists && SIMPLIFY_FILE.size > 8*1024*1024) {
+        //     // document.getElementById('size').innerHTML = Math.ceil(slider_value * SIMPLIFY_FILE.size/(100*1024*1024));
+        //     percentTo8MB = 1- ((8*1024*1024)/SIMPLIFY_FILE.size);
+        // }
+        worker.postMessage(
+            {"blob":SIMPLIFY_FILE.blob,
+            //"percentage": get_value_from_slider()/100,
+            "percentage": (8*1024*1024)/SIMPLIFY_FILE.size,
+             "simplify_name": SIMPLIFY_FILE.simplify_name
+            }
+        );
     }
 
     function dodrop(event) {
