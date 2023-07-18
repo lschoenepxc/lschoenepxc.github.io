@@ -3,19 +3,10 @@
 <head>
     <meta charset="UTF-8">
 </head>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115758488-1"></script>
+
 <script src="https://rawgit.com/Sphinxxxx/vanilla-picker/master/dist/vanilla-picker.min.js"></script>
 
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'UA-115758488-1');
-</script>
-
 <script async type="text/javascript" src="./a.out.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
 <!-- Import the modelviewer component -->
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
@@ -93,7 +84,7 @@
             picker_div.style.color = color.rgbaString;
             download_glb();
         };
-        $('#upload-gitf').attr('src', '');
+        document.querySelector('#upload-gitf').src = '';
     }
 
     function uploaded(file) {
@@ -341,7 +332,7 @@
         let url = window.URL.createObjectURL(blob);
         var download_a = document.getElementById('download');
         download_a.href = url;
-        $('#upload-gitf').attr('src', url);
+        document.querySelector('#upload-gitf').src = url;
         const glb_name = stl_name.slice(0,stl_name.length-4) + ".glb";
         download_a.download = glb_name;
 
