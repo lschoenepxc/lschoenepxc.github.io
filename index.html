@@ -401,7 +401,7 @@
         let url = window.URL.createObjectURL(blob);
         var download_a = document.getElementById('download');
         download_a.href = url;
-        document.querySelector('#upload-gltf').src = url;
+        //document.querySelector('#upload-gltf').src = url;
         const glb_name = stl_name.slice(0,stl_name.length-4) + ".glb";
         download_a.download = glb_name;
 
@@ -466,6 +466,15 @@
     {
         document.getElementById("status").textContent = text;
     }
+    async function exportGLB(){
+        const modelViewer = document.getElementById("upload-gltf");
+        const glTF = await modelViewer.exportScene();
+        const file = new File([glTF], "export.glb");
+        const link = document.createElement("a");
+        link.download =file.name;
+        link.href = URL.createObjectURL(file);
+        link.click();
+    }
 </script>
 
 <body>
@@ -483,9 +492,10 @@
     </div>
     <a id="download"><button id="download_button" disabled>Click to Download</button></a>
     <div>
-        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y">
+        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="untitled.glb" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
+        <!-- <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"> -->
             <div class="controls">
-                <div>
+                <!-- <div>
                     <p>Diffuse</p>
                     <select id="diffuse">
                       <option value="/lschoenepxc.github.io/textures/Lantern_baseColor.png">Lantern Pole</option>
@@ -498,15 +508,16 @@
                       <option value="/lschoenepxc.github.io/textures/Lantern_roughnessMetallic.png">Lantern Pole</option>
                       <option value="/lschoenepxc.github.io/textures/WaterBottle_occlusionRoughnessMetallic.png">Water Bottle</option>
                     </select>
-                </div>
+                </div> -->
                 <div>
                     <p>Normals</p>
                     <select id="normals">
+                      <option value="/lschoenepxc.github.io/textures/normal.jpg">Normal</option>
                       <option value="/lschoenepxc.github.io/textures/Lantern_normal.png">Lantern Pole</option>
                       <option value="/lschoenepxc.github.io/textures/WaterBottle_normal.png">Water Bottle</option>
                     </select>
                 </div>
-                <div>
+                <!-- <div>
                     <p>Occlusion</p>
                     <select id="occlusion">
                       <option value="/lschoenepxc.github.io/textures/WaterBottle_occlusionRoughnessMetallic.png">Water Bottle</option>
@@ -518,8 +529,9 @@
                       <option value="/lschoenepxc.github.io/textures/Lantern_emissive.png">Lantern Pole</option>
                       <option value="/lschoenepxc.github.io/textures/WaterBottle_emissive.png">Water Bottle</option>
                     </select>
-                </div>
+                </div> -->
             </div>
+            <button onclick="exportGLB()">Export GLB</button>
         </model-viewer>
 
         <script type="module">
@@ -542,21 +554,21 @@
                 createAndApplyTexture('normalTexture', event);
               });
 
-              document.querySelector('#occlusion').addEventListener('input', (event) => {
-                createAndApplyTexture('occlusionTexture', event);
-              });
+            //   document.querySelector('#occlusion').addEventListener('input', (event) => {
+            //     createAndApplyTexture('occlusionTexture', event);
+            //   });
 
-              document.querySelector('#emission').addEventListener('input', (event) => {
-                createAndApplyTexture('emissiveTexture', event);
-              });
+            //   document.querySelector('#emission').addEventListener('input', (event) => {
+            //     createAndApplyTexture('emissiveTexture', event);
+            //   });
 
-              document.querySelector('#diffuse').addEventListener('input', (event) => {
-                createAndApplyTexture('baseColorTexture', event);
-              });
+            //   document.querySelector('#diffuse').addEventListener('input', (event) => {
+            //     createAndApplyTexture('baseColorTexture', event);
+            //   });
 
-              document.querySelector('#metallicRoughness').addEventListener('input', (event) => {
-                createAndApplyTexture('metallicRoughnessTexture', event);
-              });
+            //   document.querySelector('#metallicRoughness').addEventListener('input', (event) => {
+            //     createAndApplyTexture('metallicRoughnessTexture', event);
+            //   });
             });
             
         </script>
