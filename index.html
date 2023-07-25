@@ -304,8 +304,8 @@
                             color_b,
                             1
                             ],
-                        "metallicFactor": 0,
-                        "roughnessFactor": 0
+                        "metallicFactor": 1,
+                        "roughnessFactor": 1
                     }
                 }
             ],
@@ -513,9 +513,9 @@
                     <p>Normals</p>
                     <select id="normals">
                       <option>None</option>
-                      <option value="/lschoenepxc.github.io/textures/texture-normal.jpg">Normal</option>
-                      <option value="/lschoenepxc.github.io/textures/Lantern_normal.png">Lantern Pole</option>
-                      <option value="/lschoenepxc.github.io/textures/gerillt-normal.jpg">Gerillt</option>
+                      <option value="https://lschoenepxc.github.io/textures/texture-normal.jpg">Normal</option>
+                      <option value="https://lschoenepxc.github.io/textures/Lantern_normal.png">Lantern Pole</option>
+                      <option value="https://lschoenepxc.github.io/textures/gerillt-normal.jpg">Gerillt</option>
                     </select>
                 </div>
                 <!-- <div>
@@ -559,6 +559,7 @@
                     } 
                     else {
                         material[channel].setTexture(texture);
+                        //material[channel].texture.source.setURI(event.options[event.selectedIndex].text);
                         
                         // //sampler not working, when texture None
                         // const sampler = modelViewerTexture1.model.materials[0].normalTexture.texture.sampler;
