@@ -304,8 +304,8 @@
                             color_b,
                             1
                             ],
-                        "metallicFactor": 1,
-                        "roughnessFactor": 1
+                        "metallicFactor": 0,
+                        "roughnessFactor": 0
                     }
                 }
             ],
@@ -492,7 +492,7 @@
     </div>
     <a id="download"><button id="download_button" disabled>Click to Download</button></a>
     <div>
-        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="untitled.glb" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
+        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="Kühlkörper_uv.glb" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
         <!-- <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"> -->
             <div class="controls">
                 <!-- <div>
@@ -512,9 +512,10 @@
                 <div>
                     <p>Normals</p>
                     <select id="normals">
-                      <option value="/lschoenepxc.github.io/textures/normal.jpg">Normal</option>
+                      <option>None</option>
+                      <option value="/lschoenepxc.github.io/textures/texture-normal.jpg">Normal</option>
                       <option value="/lschoenepxc.github.io/textures/Lantern_normal.png">Lantern Pole</option>
-                      <option value="/lschoenepxc.github.io/textures/WaterBottle_normal.png">Water Bottle</option>
+                      <option value="/lschoenepxc.github.io/textures/gerillt-normal.jpg">Gerillt</option>
                     </select>
                 </div>
                 <!-- <div>
@@ -531,28 +532,57 @@
                     </select>
                 </div> -->
             </div>
+            <!-- <p>Scale: <span id="texture-scale"></span></p>
+            <input type="range" min="0.5" max="1.5" value="1" step="0.01" id="scaleSlider"> -->
             <button onclick="exportGLB()">Export GLB</button>
         </model-viewer>
 
         <script type="module">
             const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
+            // const scaleSlider = document.querySelector('#scaleSlider');
             
             modelViewerTexture1.addEventListener("load", () => {
             
               const material = modelViewerTexture1.model.materials[0];
 
-              const createAndApplyTexture = async (channel, event) => {
-                const texture = await modelViewerTexture1.createTexture(event.target.value);
-                if (channel.includes('base') || channel.includes('metallic')) {
-                  material.pbrMetallicRoughness[channel].setTexture(texture);
-                } else {
-                  material[channel].setTexture(texture);
+
+            const createAndApplyTexture = async (channel, event) => {
+                if (event.target.value == "None") {
+                    // Clears the texture.
+                    material[channel].setTexture(null);
+                } else if (event.target.value) {
+                    // Creates a new texture.
+                    const texture = await modelViewerTexture1.createTexture(event.target.value);
+                    // Applies the new texture to the specified channel.
+                    if (channel.includes('base') || channel.includes('metallic')) {
+                        material.pbrMetallicRoughness[channel].setTexture(texture);
+                    } 
+                    else {
+                        material[channel].setTexture(texture);
+                        
+                        // //sampler not working, when texture None
+                        // const sampler = modelViewerTexture1.model.materials[0].normalTexture.texture.sampler;
+                        // console.log(sampler);
+
+
+                        // const scaleDisplay = document.querySelector('#texture-scale');
+                        // scaleDisplay.textContent = scaleSlider.value;
+
+                        // scaleSlider.addEventListener('input', (event) => {
+                        //     const scale = {
+                        //     x: scaleSlider.value,
+                        //     y: scaleSlider.value
+                        //     };
+                        //     sampler.setScale(scale);
+                        //     scaleDisplay.textContent = scale.x;
+                        // });
+                    }
                 }
-              }
-            
-              document.querySelector('#normals').addEventListener('input', (event) => {
+            }
+
+            document.querySelector('#normals').addEventListener('input', (event) => {
                 createAndApplyTexture('normalTexture', event);
-              });
+            });
 
             //   document.querySelector('#occlusion').addEventListener('input', (event) => {
             //     createAndApplyTexture('occlusionTexture', event);
