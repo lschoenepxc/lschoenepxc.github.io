@@ -63,6 +63,16 @@
             const s_name = SIMPLIFY_FILE.simplify_name;
             file.name = s_name;
 
+            let url = window.URL.createObjectURL(file);
+
+            var download = document.getElementById('download');
+            download.href = url;
+            download.download = s_name;
+
+            var download_button = document.getElementById('download_button');
+            download_button.disabled = false;
+            download_button.innerHTML = "Click to Download " + s_name;
+
             waitForReduction(file);
 
             put_status("Ready to download");
@@ -399,15 +409,15 @@
 
         let blob = new Blob([glb, out_bin], {type: 'application/sla'});
         let url = window.URL.createObjectURL(blob);
-        var download_a = document.getElementById('download');
-        download_a.href = url;
+        // var download_a = document.getElementById('download');
+        // download_a.href = url;
         //document.querySelector('#upload-gltf').src = url;
-        const glb_name = stl_name.slice(0,stl_name.length-4) + ".glb";
-        download_a.download = glb_name;
+        // const glb_name = stl_name.slice(0,stl_name.length-4) + ".glb";
+        // download_a.download = glb_name;
 
-        var download_button = document.getElementById('download_button');
-        download_button.disabled = false;
-        download_button.innerHTML = "Click to Download " + glb_name;
+        // var download_button = document.getElementById('download_button');
+        // download_button.disabled = false;
+        // download_button.innerHTML = "Click to Download " + glb_name;
         // download_button.click();
         reductionURL = "";
 
@@ -490,7 +500,7 @@
         <span></span>
         <span>Status: <span id="status">Waiting for upload</span>
     </div>
-    <a id="download"><button id="download_button" disabled>Click to Download</button></a>
+    <a id="download"><button id="download_button" disabled>Click to Download compressed stl</button></a>
     <div>
         <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="Kühlkörper_uv.glb" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
         <!-- <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"> -->
