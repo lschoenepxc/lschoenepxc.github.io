@@ -6,7 +6,7 @@
 
 <script src="https://rawgit.com/Sphinxxxx/vanilla-picker/master/dist/vanilla-picker.min.js"></script>
 
-<script async type="text/javascript" src="./a.out.js"></script>
+<script async type="text/javascript" src="scripts/a.out.js"></script>
 
 <!-- Import the modelviewer component -->
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
@@ -55,7 +55,7 @@
 <script type="text/javascript">
     `use strict`;
 
-    var worker = new Worker('workerReduction.js');
+    var worker = new Worker('scripts/workerReduction.js');
 
     worker.onmessage = function(e) {
         const file = e.data.blob;
@@ -502,23 +502,9 @@
     </div>
     <a id="download"><button id="download_button" disabled>Click to Download compressed stl</button></a>
     <div>
-        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="modelUV.glb" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
+        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="blender-files/models/modelUV.glb" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
         <!-- <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"> -->
             <div class="controls">
-                <!-- <div>
-                    <p>Diffuse</p>
-                    <select id="diffuse">
-                      <option value="/lschoenepxc.github.io/textures/Lantern_baseColor.png">Lantern Pole</option>
-                      <option value="/lschoenepxc.github.io/textures/WaterBottle_baseColor.png">Water Bottle</option>
-                    </select>
-                </div>
-                <div>
-                    <p>Metallic-roughness</p>
-                    <select id="metallicRoughness">
-                      <option value="/lschoenepxc.github.io/textures/Lantern_roughnessMetallic.png">Lantern Pole</option>
-                      <option value="/lschoenepxc.github.io/textures/WaterBottle_occlusionRoughnessMetallic.png">Water Bottle</option>
-                    </select>
-                </div> -->
                 <div>
                     <p>Normals</p>
                     <select id="normals">
@@ -529,19 +515,6 @@
                       <option value="https://lschoenepxc.github.io/textures/PA12-normal.png">PA12</option>
                     </select>
                 </div>
-                <!-- <div>
-                    <p>Occlusion</p>
-                    <select id="occlusion">
-                      <option value="/lschoenepxc.github.io/textures/WaterBottle_occlusionRoughnessMetallic.png">Water Bottle</option>
-                    </select>
-                </div>
-                <div>
-                    <p>Emission</p>
-                    <select id="emission">
-                      <option value="/lschoenepxc.github.io/textures/Lantern_emissive.png">Lantern Pole</option>
-                      <option value="/lschoenepxc.github.io/textures/WaterBottle_emissive.png">Water Bottle</option>
-                    </select>
-                </div> -->
                 <div>
                     <p>Metalness: <span id="metalness-value"></span></p>
                     <input id="metalness" type="range" min="0" max="1" step="0.01" value="0">
@@ -562,81 +535,65 @@
             
             modelViewerTexture1.addEventListener("load", () => {
             
-              const material = modelViewerTexture1.model.materials[0];
+                const material = modelViewerTexture1.model.materials[0];
 
-              let metalnessDisplay = document.querySelector("#metalness-value");
-              let roughnessDisplay = document.querySelector("#roughness-value");
+                let metalnessDisplay = document.querySelector("#metalness-value");
+                let roughnessDisplay = document.querySelector("#roughness-value");
 
-              metalnessDisplay.textContent = material.pbrMetallicRoughness.metallicFactor;
-              roughnessDisplay.textContent = material.pbrMetallicRoughness.roughnessFactor;
-              // Change color
-              // material.pbrMetallicRoughness.setBaseColorFactor([0.7294, 0.5333, 0.0392]);
+                metalnessDisplay.textContent = material.pbrMetallicRoughness.metallicFactor;
+                roughnessDisplay.textContent = material.pbrMetallicRoughness.roughnessFactor;
+                // Change color
+                // material.pbrMetallicRoughness.setBaseColorFactor([0.7294, 0.5333, 0.0392]);
 
-              document.querySelector('#metalness').addEventListener('input', (event) => {
-                material.pbrMetallicRoughness.setMetallicFactor(event.target.value);
-                metalnessDisplay.textContent = event.target.value;
-              });
+                document.querySelector('#metalness').addEventListener('input', (event) => {
+                    material.pbrMetallicRoughness.setMetallicFactor(event.target.value);
+                    metalnessDisplay.textContent = event.target.value;
+                });
 
-              document.querySelector('#roughness').addEventListener('input', (event) => {
-                material.pbrMetallicRoughness.setRoughnessFactor(event.target.value);
-                roughnessDisplay.textContent = event.target.value;
-              });
-
-
-            const createAndApplyTexture = async (channel, event) => {
-                if (event.target.value == "None") {
-                    // Clears the texture.
-                    material[channel].setTexture(null);
-                } else if (event.target.value) {
-                    // Creates a new texture.
-                    const texture = await modelViewerTexture1.createTexture(event.target.value);
-                    // Applies the new texture to the specified channel.
-                    if (channel.includes('base') || channel.includes('metallic')) {
-                        material.pbrMetallicRoughness[channel].setTexture(texture);
-                    } 
-                    else {
-                        material[channel].setTexture(texture);
-                        //material[channel].texture.source.setURI(event.options[event.selectedIndex].text);
-                        
-                        // //sampler not working, when texture None
-                        // const sampler = modelViewerTexture1.model.materials[0].normalTexture.texture.sampler;
-                        // console.log(sampler);
+                document.querySelector('#roughness').addEventListener('input', (event) => {
+                    material.pbrMetallicRoughness.setRoughnessFactor(event.target.value);
+                    roughnessDisplay.textContent = event.target.value;
+                });
 
 
-                        // const scaleDisplay = document.querySelector('#texture-scale');
-                        // scaleDisplay.textContent = scaleSlider.value;
+                const createAndApplyTexture = async (channel, event) => {
+                    if (event.target.value == "None") {
+                        // Clears the texture.
+                        material[channel].setTexture(null);
+                    } else if (event.target.value) {
+                        // Creates a new texture.
+                        const texture = await modelViewerTexture1.createTexture(event.target.value);
+                        // Applies the new texture to the specified channel.
+                        if (channel.includes('base') || channel.includes('metallic')) {
+                            material.pbrMetallicRoughness[channel].setTexture(texture);
+                        } 
+                        else {
+                            material[channel].setTexture(texture);
+                            //material[channel].texture.source.setURI(event.options[event.selectedIndex].text);
+                            
+                            // //sampler not working, when texture None
+                            // const sampler = modelViewerTexture1.model.materials[0].normalTexture.texture.sampler;
+                            // console.log(sampler);
 
-                        // scaleSlider.addEventListener('input', (event) => {
-                        //     const scale = {
-                        //     x: scaleSlider.value,
-                        //     y: scaleSlider.value
-                        //     };
-                        //     sampler.setScale(scale);
-                        //     scaleDisplay.textContent = scale.x;
-                        // });
+
+                            // const scaleDisplay = document.querySelector('#texture-scale');
+                            // scaleDisplay.textContent = scaleSlider.value;
+
+                            // scaleSlider.addEventListener('input', (event) => {
+                            //     const scale = {
+                            //     x: scaleSlider.value,
+                            //     y: scaleSlider.value
+                            //     };
+                            //     sampler.setScale(scale);
+                            //     scaleDisplay.textContent = scale.x;
+                            // });
+                        }
                     }
                 }
-            }
 
-            document.querySelector('#normals').addEventListener('input', (event) => {
-                createAndApplyTexture('normalTexture', event);
-            });
-
-            //   document.querySelector('#occlusion').addEventListener('input', (event) => {
-            //     createAndApplyTexture('occlusionTexture', event);
-            //   });
-
-            //   document.querySelector('#emission').addEventListener('input', (event) => {
-            //     createAndApplyTexture('emissiveTexture', event);
-            //   });
-
-            //   document.querySelector('#diffuse').addEventListener('input', (event) => {
-            //     createAndApplyTexture('baseColorTexture', event);
-            //   });
-
-            //   document.querySelector('#metallicRoughness').addEventListener('input', (event) => {
-            //     createAndApplyTexture('metallicRoughnessTexture', event);
-            //   });
+                document.querySelector('#normals').addEventListener('input', (event) => {
+                    createAndApplyTexture('normalTexture', event);
+                });
             });
             
         </script>
