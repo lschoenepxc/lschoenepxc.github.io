@@ -542,6 +542,14 @@
                       <option value="/lschoenepxc.github.io/textures/WaterBottle_emissive.png">Water Bottle</option>
                     </select>
                 </div> -->
+                <div>
+                    <p>Metalness: <span id="metalness-value"></span></p>
+                    <input id="metalness" type="range" min="0" max="1" step="0.01" value="0">
+                </div>
+                <div>
+                    <p>Roughness: <span id="roughness-value"></span></p>
+                    <input id="roughness" type="range" min="0" max="1" step="0.01" value="0">
+                </div>
             </div>
             <!-- <p>Scale: <span id="texture-scale"></span></p>
             <input type="range" min="0.5" max="1.5" value="1" step="0.01" id="scaleSlider"> -->
@@ -555,6 +563,24 @@
             modelViewerTexture1.addEventListener("load", () => {
             
               const material = modelViewerTexture1.model.materials[0];
+
+              let metalnessDisplay = document.querySelector("#metalness-value");
+              let roughnessDisplay = document.querySelector("#roughness-value");
+
+              metalnessDisplay.textContent = material.pbrMetallicRoughness.metallicFactor;
+              roughnessDisplay.textContent = material.pbrMetallicRoughness.roughnessFactor;
+              // Change color
+              // material.pbrMetallicRoughness.setBaseColorFactor([0.7294, 0.5333, 0.0392]);
+
+              document.querySelector('#metalness').addEventListener('input', (event) => {
+                material.pbrMetallicRoughness.setMetallicFactor(event.target.value);
+                metalnessDisplay.textContent = event.target.value;
+              });
+
+              document.querySelector('#roughness').addEventListener('input', (event) => {
+                material.pbrMetallicRoughness.setRoughnessFactor(event.target.value);
+                roughnessDisplay.textContent = event.target.value;
+              });
 
 
             const createAndApplyTexture = async (channel, event) => {
