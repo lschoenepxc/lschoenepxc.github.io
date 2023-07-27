@@ -131,26 +131,26 @@
     };
 
     window.onload = function () {
-        const init_color_str = GLOBAL.color_str;
-        var picker_div = document.getElementById("picker");
-        picker_div.style.backgroundColor = init_color_str;
-        picker_div.style.color = init_color_str;
-        var picker = new Picker(
-            {
-                parent: picker_div,
-                alpha: false,
-                color: init_color_str
-            }
-        );
-        picker_div.onclick = function() {
-            picker.show();
-        };
-        picker.onDone = function(color) {
-            GLOBAL.color = color.rgba;
-            picker_div.style.background = color.rgbaString;
-            picker_div.style.color = color.rgbaString;
-            download_glb();
-        };
+        // const init_color_str = GLOBAL.color_str;
+        // var picker_div = document.getElementById("picker");
+        // picker_div.style.backgroundColor = init_color_str;
+        // picker_div.style.color = init_color_str;
+        // var picker = new Picker(
+        //     {
+        //         parent: picker_div,
+        //         alpha: false,
+        //         color: init_color_str
+        //     }
+        // );
+        // picker_div.onclick = function() {
+        //     picker.show();
+        // };
+        // picker.onDone = function(color) {
+        //     GLOBAL.color = color.rgba;
+        //     picker_div.style.background = color.rgbaString;
+        //     picker_div.style.color = color.rgbaString;
+        //     download_glb();
+        // };
         document.querySelector('#upload-gltf').src = '';
     }
 
@@ -495,8 +495,8 @@
          ondrop="event.stopPropagation(); event.preventDefault();
          dodrop(event);">
         <span>Drag and drop STL files here or <input type="file" onChange="uploaded()" id="fileuploadform"/></span>
-        <span></span>
-        <span>Click to change color --> <span id="picker">COLOR</span></span>
+        <!-- <span></span>
+        <span>Click to change color -> <span id="picker">COLOR</span></span> -->
         <span></span>
         <span>Status: <span id="status">Waiting for upload</span>
     </div>
@@ -524,6 +524,12 @@
                     <input id="roughness" type="range" min="0" max="1" step="0.01" value="0">
                 </div>
             </div>
+            <div id="color-controls">
+                <button data-color="#969696">Grey</button>
+                <button data-color="#ff0000">Red</button>
+                <button data-color="#00ff00">Green</button>
+                <button data-color="#0000ff">Blue</button>
+            </div>
             <!-- <p>Scale: <span id="texture-scale"></span></p>
             <input type="range" min="0.5" max="1.5" value="1" step="0.01" id="scaleSlider"> -->
             <button onclick="exportGLB()">Export GLB</button>
@@ -532,6 +538,12 @@
         <script type="module">
             const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
             // const scaleSlider = document.querySelector('#scaleSlider');
+
+            document.querySelector('#color-controls').addEventListener('click', (event) => {
+                const colorString = event.target.dataset.color;
+                const [material] = modelViewerTexture1.model.materials;
+                material.pbrMetallicRoughness.setBaseColorFactor(colorString);
+            });
             
             modelViewerTexture1.addEventListener("load", () => {
             
