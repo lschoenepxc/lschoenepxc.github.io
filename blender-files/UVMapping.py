@@ -7,6 +7,7 @@ import time
 
 # Command from command line
 # blender --background --python UVMapping.py -- blobUrl localPath outputPath
+# blender/blender --background --python blender-files/UVMapping.py -- http://localhost:3000/1c54761d-b230-457b-b375-a0ccb5f3fd1f C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/test.glb C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/modelUV.glb
 
 # without blob
 # blender --background --python UVMapping.py -- C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/test.glb C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/modelUV.glb
@@ -17,22 +18,25 @@ start = time.time()
 argv = sys.argv
 argv = argv[argv.index("--") + 1:]  # get all args after "--"
 
-# print(argv)  # --> ['blobUrl', 'localPath', 'outputPath']
+print(argv)  # --> ['blobUrl', 'localPath', 'outputPath']
 
 # Blob URL from website where we read the glb from
-# blobUrl = argv[0]
+blobUrl = argv[0]
+# blobUrl = blobUrl[blobUrl.index("blob:") + 5:]
+print(blobUrl)
 
 # LocalPath on server where we write the glb to
-inputPath = argv[0] 
+inputPath = argv[1] 
 
 # Output path on server where we write the UV-Mapped glb to
-outputPath = argv[1]
+outputPath = argv[2]
 
-# r = requests.get('blobUrl')
-# if r.status_code == 200:
-#     with open(path, 'wb') as f:
-#         for chunk in r:
-#             f.write(chunk)
+r = requests.get(blobUrl)
+if r.status_code == 200:
+    print("Writing to file:")
+    with open(inputPath, 'wb') as f:
+        for chunk in r:
+            f.write(chunk)
 
 # From the command line in the future
 #inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/test.glb"

@@ -322,7 +322,7 @@
         } // end of dict
     }
 
-    function download_glb() {
+    async function download_glb() {
 
         if (GLOBAL.stl_name === undefined) {
             put_status("Please upload a file");
@@ -411,7 +411,7 @@
         let url = window.URL.createObjectURL(blob);
         // var download_a = document.getElementById('download');
         // download_a.href = url;
-        //document.querySelector('#upload-gltf').src = url;
+        document.querySelector('#upload-gltf').src = url;
         // const glb_name = stl_name.slice(0,stl_name.length-4) + ".glb";
         // download_a.download = glb_name;
 
@@ -419,17 +419,7 @@
         // download_button.disabled = false;
         // download_button.innerHTML = "Click to Download " + glb_name;
         // download_button.click();
-        reductionURL = "";
 
-        if (blob.size < 3145728) {
-            put_status("Success, you can now view it in 3D!")
-        } else {
-            put_status("Your stl file is too large, the GLB file is bigger than 3 Mb, cannot share on facebook.")
-        }
-    }
-
-    function get_value_from_slider() {
-        return document.getElementById('slider').valueAsNumber;
     }
 
     function check_file(file, success_cb) {
@@ -457,7 +447,6 @@
         // }
         worker.postMessage(
             {"blob":SIMPLIFY_FILE.blob,
-            //"percentage": get_value_from_slider()/100,
             "percentage": (8*1024*1024)/SIMPLIFY_FILE.size,
              "simplify_name": SIMPLIFY_FILE.simplify_name
             }
@@ -483,8 +472,27 @@
         const link = document.createElement("a");
         link.download =file.name;
         link.href = URL.createObjectURL(file);
-        link.click();
+        // link.click();
+        blobUrl = link.href;
+        console.log(blobUrl);
+        var inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/test.glb";
+        var outputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/modelUV.glb";
+        // insertPHP(blobUrl, inputPath, outputPath);
+
+        document.querySelector('#upload-gltf').src = "blender-files/models/modelUV.glb";
     }
+
+    function insertPHP(blobUrl, inputPath, outputPath){
+        const xmlhttp = new XMLHttpRequest();
+            xmlhttp.onload = function() {
+            document.getElementById("successPHP").innerHTML = this.responseText;
+        }
+        // var blobUrl = "";
+        // var inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/test.glb";
+        // var outputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/modelUV.glb";
+        xmlhttp.open("GET", "include.php?blobUrl=" + blobUrl + "&inputPath=" + inputPath + "&outputPath=" + outputPath);
+        xmlhttp.send();
+    }          
 </script>
 
 <body>
@@ -501,8 +509,9 @@
         <span>Status: <span id="status">Waiting for upload</span>
     </div>
     <a id="download"><button id="download_button" disabled>Click to Download compressed stl</button></a>
+    <p id="successPHP"></p>
     <div>
-        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="blender-files/models/modelUV.glb" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
+        <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
         <!-- <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"> -->
             <div class="controls">
                 <div>
@@ -536,7 +545,7 @@
             <button onclick="exportGLB()">Export GLB</button>
         </model-viewer>
 
-        <script type="module">
+        <script type="module">       
             const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
             // const scaleSlider = document.querySelector('#scaleSlider');
 
@@ -547,6 +556,7 @@
             });
             
             modelViewerTexture1.addEventListener("load", () => {
+                exportGLB();
             
                 const material = modelViewerTexture1.model.materials[0];
 
