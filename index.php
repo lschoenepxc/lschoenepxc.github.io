@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
 </head>
 
-<script src="https://rawgit.com/Sphinxxxx/vanilla-picker/master/dist/vanilla-picker.min.js"></script>
-
 <script async type="text/javascript" src="scripts/a.out.js"></script>
+
+<script type="text/javascript" src="scripts/main.js"></script>
 
 <!-- Import the modelviewer component -->
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
@@ -19,21 +19,6 @@
     white-space: pre;
     border: 1px dashed black;
     border-radius: 10px;
-}
-
-#picker {
-    cursor: pointer;
-}
-
-.picker_wrapper::before {
-    height: 0;
-}
-.picker_wrapper .picker_hue,
-.picker_wrapper .picker_sl,
-.picker_wrapper .picker_alpha,
-.picker_wrapper .picker_sample {
-    outline: none;
-    box-shadow: 0 0 0 1px silver;
 }
 
 #upload-gltf {
@@ -52,449 +37,6 @@
 
 </style>
 
-<script type="text/javascript">
-    `use strict`;
-
-    var worker = new Worker('scripts/workerReduction.js');
-
-    worker.onmessage = function(e) {
-        const file = e.data.blob;
-        if (file !== undefined) {
-            const s_name = SIMPLIFY_FILE.simplify_name;
-            file.name = s_name;
-
-            let url = window.URL.createObjectURL(file);
-
-            var download = document.getElementById('download');
-            download.href = url;
-            download.download = s_name;
-
-            var download_button = document.getElementById('download_button');
-            download_button.disabled = false;
-            download_button.innerHTML = "Click to Download " + s_name;
-
-            waitForReduction(file);
-
-            put_status("Ready to download");
-            return;
-        }
-
-        console.error("Unknown Message from WebWorker", e.data);
-    }
-
-    worker.onerror = function(e) {
-        console.log(e);
-        console.log(
-            'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message
-        );
-    }
-
-    let SIMPLIFY_FILE = {
-        'blob': undefined,
-        get name(){
-            if (this.exists)
-                return this.blob.name;
-        },
-        get simplify_name() {
-            if (this.exists)
-                return "simplify_"+this.name;
-        },
-        get size() {
-            if (this.exists)
-                return this.blob.size;
-        },
-        get exists() {
-            if (this.blob)
-                return true;
-            else {
-                return false;
-            }
-        }
-    }
-
-    let GLOBAL = {
-        color : [150, 150, 150, 1],
-        get color_str() {
-            return `rgba(${this.color[0]},
-            ${this.color[1]},
-            ${this.color[2]},
-            ${this.color[3]})`;
-        },
-        get color_0to1() {
-            return [this.color[0]/255,
-                    this.color[1]/255,
-                    this.color[2]/255,
-                    this.color[3]
-            ];
-        },
-        stl_name: undefined
-    };
-
-    window.onload = function () {
-        // const init_color_str = GLOBAL.color_str;
-        // var picker_div = document.getElementById("picker");
-        // picker_div.style.backgroundColor = init_color_str;
-        // picker_div.style.color = init_color_str;
-        // var picker = new Picker(
-        //     {
-        //         parent: picker_div,
-        //         alpha: false,
-        //         color: init_color_str
-        //     }
-        // );
-        // picker_div.onclick = function() {
-        //     picker.show();
-        // };
-        // picker.onDone = function(color) {
-        //     GLOBAL.color = color.rgba;
-        //     picker_div.style.background = color.rgbaString;
-        //     picker_div.style.color = color.rgbaString;
-        //     download_glb();
-        // };
-        document.querySelector('#upload-gltf').src = '';
-    }
-
-    function uploaded(file) {
-        if (file === undefined) { // via upload button
-            var uploadform = document.getElementById("fileuploadform");
-            file = uploadform.files[0];
-
-            // this helps to force trigger even if user upload the same file
-            // https://stackoverflow.com/a/12102992/5260518
-            this.value = null;
-        }
-
-        // Reduction --> 
-        if (file === undefined) // not via upload button defined otherwise
-            file = SIMPLIFY_FILE.blob;
-
-        var uploadform = document.getElementById("fileuploadform");
-        console.log(uploadform);
-        uploadform.files[0] = file;
-
-        SIMPLIFY_FILE.blob = file;
-        // const percentTo8MB = 0.99;
-        if (SIMPLIFY_FILE.size > 8*1024*1024) {
-            check_file_Reduction(post_to_worker);
-        }
-        else{
-            waitForReduction(file);
-        }
-        
-        // <-- Reduction
-    }
-
-    function waitForReduction(file){
-            // now using reducted stl-file
-            check_file(file, function(){check_file_success()});
-
-            function check_file_success() {
-
-                put_status("Converting by your browser");
-
-                var filename = file.name;
-                var fr = new FileReader();
-                fr.readAsDataURL(file);
-
-                fr.onload = function (){
-
-                console.log(filename);
-
-                var stl_name = filename;
-
-                var data = atob(fr.result.split(",")[1]); // base64 to Uint8 for emscripten
-                Module['FS_createDataFile'](".", stl_name, data, true, true);
-
-                Module.ccall("make_bin", // c function name
-                    undefined, // return
-                    ["string"], // param
-                    [stl_name]
-                );
-
-                // Using a file to output data from c++ to js
-                // because if I use a pointer to array, if memory grow in wasm,
-                // this array will be in a different place
-                // then the pointer will be pointing to a wrong memory address
-                let out_data = Module['FS_readFile']('data.txt', { encoding: 'utf8'});
-                out_data = out_data.split(" ");
-                GLOBAL.number_indices = parseInt(out_data[0]);
-                GLOBAL.number_vertices = parseInt(out_data[1]);
-                GLOBAL.indices_blength = parseInt(out_data[2]);
-                GLOBAL.vertices_blength = parseInt(out_data[3]);
-                GLOBAL.total_blength = parseInt(out_data[4]);
-                GLOBAL.minx = parseFloat(out_data[5]);
-                GLOBAL.miny = parseFloat(out_data[6]);
-                GLOBAL.minz = parseFloat(out_data[7]);
-                GLOBAL.maxx = parseFloat(out_data[8]);
-                GLOBAL.maxy = parseFloat(out_data[9]);
-                GLOBAL.maxz = parseFloat(out_data[10]);
-                GLOBAL.stl_name = stl_name;
-                download_glb();
-            }
-        }
-    }
-
-    function gltf_dict(
-        total_blength, indices_blength, vertices_boffset, vertices_blength,
-        number_indices, number_vertices, minx, miny, minz, maxx, maxy, maxz,
-        color_r, color_g, color_b
-    ) {
-        return {
-            "scenes" : [
-                {
-                    "nodes" : [ 0 ]
-                }
-            ],
-            "nodes" : [
-                {
-                    "mesh" : 0,
-                    "rotation": [-0.70710678119, 0.0, 0.0, 0.70710678119]
-                }
-            ],
-            "meshes" : [
-                {
-                    "primitives" : [ {
-                        "attributes" : {
-                            "POSITION" : 1
-                        },
-                        "indices" : 0,
-                        "material" : 0
-                    } ]
-                }
-            ],
-            "buffers" : [
-                {
-                    "byteLength" : total_blength
-                }
-            ],
-            "bufferViews" : [
-                {
-                    "buffer" : 0,
-                    "byteOffset" : 0,
-                    "byteLength" : indices_blength,
-                    "target" : 34963
-                },
-                {
-                    "buffer" : 0,
-                    "byteOffset" : vertices_boffset,
-                    "byteLength" : vertices_blength,
-                    "target" : 34962
-                }
-            ],
-            "accessors" : [
-                {
-                    "bufferView" : 0,
-                    "byteOffset" : 0,
-                    "componentType" : 5125,
-                    "count" : number_indices,
-                    "type" : "SCALAR",
-                    "max" : [ number_vertices - 1 ],
-                    "min" : [ 0 ]
-                },
-                {
-                    "bufferView" : 1,
-                    "byteOffset" : 0,
-                    "componentType" : 5126,
-                    "count" : number_vertices,
-                    "type" : "VEC3",
-                    "min" : [minx, miny, minz],
-                    "max" : [maxx, maxy, maxz]
-                }
-            ],
-            "asset" : {
-                "version" : "2.0",
-                 "generator": "STL2GLTF"
-            },
-            "materials": [
-                {
-                    "pbrMetallicRoughness": {
-                        "baseColorFactor": [
-                            color_r,
-                            color_g,
-                            color_b,
-                            1
-                            ],
-                        "metallicFactor": 0,
-                        "roughnessFactor": 0
-                    }
-                }
-            ],
-        } // end of dict
-    }
-
-    async function download_glb() {
-
-        if (GLOBAL.stl_name === undefined) {
-            put_status("Please upload a file");
-            return;
-        } else {
-        }
-
-        const stl_name = GLOBAL.stl_name;
-        const color = GLOBAL.color_0to1;
-
-        const total_blength = GLOBAL.total_blength;
-        const indices_blength = GLOBAL.indices_blength;
-        const vertices_boffset = GLOBAL.indices_blength;
-        const vertices_blength = GLOBAL.vertices_blength;
-        const number_indices = GLOBAL.number_indices;
-        const number_vertices = GLOBAL.number_vertices;
-        const minx = GLOBAL.minx;
-        const miny = GLOBAL.miny;
-        const minz = GLOBAL.minz;
-        const maxx = GLOBAL.maxx;
-        const maxy = GLOBAL.maxy;
-        const maxz = GLOBAL.maxz;
-
-        const gltf_json = JSON.stringify(
-            gltf_dict(
-                total_blength, indices_blength, vertices_boffset, vertices_blength,
-                number_indices, number_vertices, minx, miny, minz, maxx, maxy, maxz,
-                color[0], color[1], color[2]
-            )
-        );
-
-        const out_bin_bytelength = total_blength;
-
-        const header_bytelength = 20;
-        const scene_len = gltf_json.length;
-        const padded_scene_len = ((scene_len+ 3) & ~3);
-        const body_offset = padded_scene_len + header_bytelength;
-        const file_no_bin_len = body_offset + 8;
-        const file_len = file_no_bin_len + out_bin_bytelength;
-
-        let glb = new Uint8Array(file_no_bin_len);
-        glb[0] = 0x67; // g
-        glb[1] = 0x6c; // l
-        glb[2] = 0x54; // t
-        glb[3] = 0x46; // f
-
-        glb[4]  = ( 2 ) & 0xFF;
-        glb[5]  = ( 2>>8 ) & 0xFF;
-        glb[6] = ( 2>>16 ) & 0xFF;
-        glb[7] = ( 2>>24 ) & 0xFF;
-
-        glb[8]  = ( file_len ) & 0xFF;
-        glb[9]  = ( file_len>>8 ) & 0xFF;
-        glb[10] = ( file_len>>16 ) & 0xFF;
-        glb[11] = ( file_len>>24 ) & 0xFF;
-        glb[12] = ( padded_scene_len ) & 0xFF;
-        glb[13] = ( padded_scene_len>>8 ) & 0xFF;
-        glb[14] = ( padded_scene_len>>16 ) & 0xFF;
-        glb[15] = ( padded_scene_len>>24 ) & 0xFF;
-
-        // JSON
-        glb[16] = 0x4A; // J
-        glb[17] = 0x53; // S
-        glb[18] = 0x4F; // O
-        glb[19] = 0x4E; // N
-
-        for (let i=0;i<gltf_json.length;i++) {
-            glb[i+header_bytelength] = gltf_json.charCodeAt(i);
-        }
-        for (let i=0;i<padded_scene_len - scene_len;i++) {
-            glb[i+scene_len+header_bytelength] = 0x20;
-        }
-
-        glb[body_offset  ] = ( out_bin_bytelength ) & 0xFF;
-        glb[body_offset+1] = ( out_bin_bytelength>>8 ) & 0xFF;
-        glb[body_offset+2] = ( out_bin_bytelength>>16 ) & 0xFF;
-        glb[body_offset+3] = ( out_bin_bytelength>>24 ) & 0xFF;
-        glb[body_offset+4] = 0x42; // B
-        glb[body_offset+5] = 0x49; // I
-        glb[body_offset+6] = 0x4E; // N
-        glb[body_offset+7] = 0x00; //
-
-        let out_bin = Module['FS_readFile']('out.bin');
-
-        let blob = new Blob([glb, out_bin], {type: 'application/sla'});
-        let url = window.URL.createObjectURL(blob);
-        // var download_a = document.getElementById('download');
-        // download_a.href = url;
-        document.querySelector('#upload-gltf').src = url;
-        // const glb_name = stl_name.slice(0,stl_name.length-4) + ".glb";
-        // download_a.download = glb_name;
-
-        // var download_button = document.getElementById('download_button');
-        // download_button.disabled = false;
-        // download_button.innerHTML = "Click to Download " + glb_name;
-        // download_button.click();
-
-    }
-
-    function check_file(file, success_cb) {
-        put_status("Checking file");
-        success_cb();
-    }
-
-    function check_file_Reduction(success_cb) {
-        put_status("Checking file");
-        const filename = SIMPLIFY_FILE.name;
-        const extension = filename.toLowerCase().slice(filename.lastIndexOf(".")+1, filename.length);
-        if (extension!=="stl" && extension!=="obj") {
-            put_status("Please upload an stl or obj file not "+ extension);
-            return;
-        }
-        success_cb();
-    }
-
-    function post_to_worker() {
-        put_status("Simplifying by your browser...See log below");
-        // const percentTo8MB = 0.99;
-        // if (SIMPLIFY_FILE.exists && SIMPLIFY_FILE.size > 8*1024*1024) {
-        //     // document.getElementById('size').innerHTML = Math.ceil(slider_value * SIMPLIFY_FILE.size/(100*1024*1024));
-        //     percentTo8MB = 1- ((8*1024*1024)/SIMPLIFY_FILE.size);
-        // }
-        worker.postMessage(
-            {"blob":SIMPLIFY_FILE.blob,
-            "percentage": (8*1024*1024)/SIMPLIFY_FILE.size,
-             "simplify_name": SIMPLIFY_FILE.simplify_name
-            }
-        );
-    }
-
-    function dodrop(event) {
-        var dt = event.dataTransfer;
-        var file = dt.files[0];
-        var filename = file.name;
-        put_status("Converting " + filename + " to GLB using WebAssembly.");
-        uploaded(file);
-    }
-
-    function put_status(text)
-    {
-        document.getElementById("status").textContent = text;
-    }
-    async function exportGLB(){
-        const modelViewer = document.getElementById("upload-gltf");
-        const glTF = await modelViewer.exportScene();
-        const file = new File([glTF], "export.glb");
-        const link = document.createElement("a");
-        link.download =file.name;
-        link.href = URL.createObjectURL(file);
-        // link.click();
-        blobUrl = link.href;
-        console.log(blobUrl);
-        var inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/test.glb";
-        var outputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/modelUV.glb";
-        // insertPHP(blobUrl, inputPath, outputPath);
-
-        document.querySelector('#upload-gltf').src = "blender-files/models/modelUV.glb";
-    }
-
-    function insertPHP(blobUrl, inputPath, outputPath){
-        const xmlhttp = new XMLHttpRequest();
-            xmlhttp.onload = function() {
-            document.getElementById("successPHP").innerHTML = this.responseText;
-        }
-        // var blobUrl = "";
-        // var inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/test.glb";
-        // var outputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/modelUV.glb";
-        xmlhttp.open("GET", "include.php?blobUrl=" + blobUrl + "&inputPath=" + inputPath + "&outputPath=" + outputPath);
-        xmlhttp.send();
-    }          
-</script>
-
 <body>
     <h1>3D-View of STL-File</h1>
     <div id="dragAndDrop"
@@ -503,8 +45,6 @@
          ondrop="event.stopPropagation(); event.preventDefault();
          dodrop(event);">
         <span>Drag and drop STL files here or <input type="file" onChange="uploaded()" id="fileuploadform"/></span>
-        <!-- <span></span>
-        <span>Click to change color -> <span id="picker">COLOR</span></span> -->
         <span></span>
         <span>Status: <span id="status">Waiting for upload</span>
     </div>
@@ -512,38 +52,36 @@
     <p id="successPHP"></p>
     <div>
         <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>
-        <!-- <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"> -->
-            <div class="controls">
-                <div>
-                    <p>Normals</p>
-                    <select id="normals">
-                      <option>None</option>
-                      <option value="https://lschoenepxc.github.io/textures/texture-normal.jpg">Normal</option>
-                      <option value="https://lschoenepxc.github.io/textures/Lantern_normal.png">Lantern Pole</option>
-                      <option value="https://lschoenepxc.github.io/textures/gerillt-normal.jpg">Gerillt</option>
-                      <option value="https://lschoenepxc.github.io/textures/PA12-normal.png">PA12</option>
-                      <option value="https://lschoenepxc.github.io/textures/brick_normal_map.png">Brick Wall</option>
-                    </select>
-                </div>
-                <div>
-                    <p>Metalness: <span id="metalness-value"></span></p>
-                    <input id="metalness" type="range" min="0" max="1" step="0.01" value="0">
-                </div>
-                <div>
-                    <p>Roughness: <span id="roughness-value"></span></p>
-                    <input id="roughness" type="range" min="0" max="1" step="0.01" value="0">
-                </div>
+        <div class="controls">
+            <div>
+                <p>Normals</p>
+                <select id="normals">
+                    <option>None</option>
+                    <option value="https://lschoenepxc.github.io/textures/texture-normal.jpg">Normal</option>
+                    <option value="https://lschoenepxc.github.io/textures/Lantern_normal.png">Lantern Pole</option>
+                    <option value="https://lschoenepxc.github.io/textures/gerillt-normal.jpg">Gerillt</option>
+                    <option value="https://lschoenepxc.github.io/textures/PA12-normal.png">PA12</option>
+                    <option value="https://lschoenepxc.github.io/textures/brick_normal_map.png">Brick Wall</option>
+                </select>
             </div>
-            <div id="color-controls">
-                <button data-color="#969696">Grey</button>
-                <button data-color="#ff0000">Red</button>
-                <button data-color="#00ff00">Green</button>
-                <button data-color="#0000ff">Blue</button>
+            <div>
+                <p>Metalness: <span id="metalness-value"></span></p>
+                <input id="metalness" type="range" min="0" max="1" step="0.01" value="0">
             </div>
-            <!-- <p>Scale: <span id="texture-scale"></span></p>
-            <input type="range" min="0.5" max="1.5" value="1" step="0.01" id="scaleSlider"> -->
-            <button onclick="exportGLB()">Export GLB</button>
-        </model-viewer>
+            <div>
+                <p>Roughness: <span id="roughness-value"></span></p>
+                <input id="roughness" type="range" min="0" max="1" step="0.01" value="0">
+            </div>
+        </div>
+        <div id="color-controls">
+            <button data-color="#969696">Grey</button>
+            <button data-color="#ff0000">Red</button>
+            <button data-color="#00ff00">Green</button>
+            <button data-color="#0000ff">Blue</button>
+        </div>
+        <!-- <p>Scale: <span id="texture-scale"></span></p>
+        <input type="range" min="0.5" max="1.5" value="1" step="0.01" id="scaleSlider"> -->
+        <button onclick="exportGLB()">Export GLB</button>
 
         <script type="module">       
             const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
@@ -556,7 +94,12 @@
             });
             
             modelViewerTexture1.addEventListener("load", () => {
-                exportGLB();
+                if (loadFlag == false) {
+                    console.log("Now uploading and creating UV Map!");
+                    createUV();
+                    loadFlag = true;
+                }
+                console.log("No repeating of uploading");
             
                 const material = modelViewerTexture1.model.materials[0];
 
