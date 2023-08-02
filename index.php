@@ -13,8 +13,6 @@
 <!-- <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script> -->
 <script type="module" src="scripts/model-viewer.min.js"></script>
 
-<script type="module" src="scripts/mv-functions.js"></script>
-
 <style>
 
 #dragAndDrop {
