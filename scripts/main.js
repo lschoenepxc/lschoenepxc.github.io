@@ -1,7 +1,6 @@
 // `use strict`;  // Strict mode helps you write cleaner code, like preventing you from using undeclared variables.
 
 var loadFlag = true;
-var listenerFlag = true;
 
 var worker = new Worker('scripts/workerReduction.js');
 
