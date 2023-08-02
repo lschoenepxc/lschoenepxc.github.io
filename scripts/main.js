@@ -1,7 +1,10 @@
 // `use strict`;  // Strict mode helps you write cleaner code, like preventing you from using undeclared variables.
 
+
+// flag to indicate, that uploading to server and creating UV Map is necessary
 var loadFlag = true;
 
+// <-- Reduction Worker via WebAssembly
 var worker = new Worker('scripts/workerReduction.js');
 
 worker.onmessage = function(e) {
@@ -12,6 +15,7 @@ worker.onmessage = function(e) {
 
         let url = window.URL.createObjectURL(file);
 
+        // Ability to download simplified STL (before converting to GBL)
         var download = document.getElementById('download');
         download.href = url;
         download.download = s_name;
@@ -20,7 +24,8 @@ worker.onmessage = function(e) {
         download_button.disabled = false;
         download_button.innerHTML = "Click to Download " + s_name;
 
-        waitForReduction(file);
+        // Converting after waiting for Reduction
+        stl2Converter(file);
 
         put_status("Waiting for UV-Map");
         return;
@@ -36,6 +41,9 @@ worker.onerror = function(e) {
     );
 }
 
+// Reduction Worker via WebAssembly -->
+
+// <-- Data structure for simplifying the stl
 let SIMPLIFY_FILE = {
     'blob': undefined,
     get name(){
@@ -58,7 +66,9 @@ let SIMPLIFY_FILE = {
         }
     }
 }
+// Data structure for simplifying the stl -->
 
+// <-- Global data structure for uploaded stl file
 let GLOBAL = {
     color : [150, 150, 150, 1],
     get color_str() {
@@ -76,6 +86,7 @@ let GLOBAL = {
     },
     stl_name: undefined
 };
+// Global data structure for uploaded stl file -->
 
 function uploaded(file) {
     if (file === undefined) { // via upload button
@@ -99,14 +110,14 @@ function uploaded(file) {
         check_file_Reduction(post_to_worker);
     }
     else{
-        waitForReduction(file);
+        stl2Converter(file);
     }
     
     // <-- Reduction
 }
 
-function waitForReduction(file){
-    // now using reducted stl-file
+function stl2Converter(file){
+    // now using reducted STL-file and convert to GBL
     check_file(file, function(){check_file_success()});
 
     function check_file_success() {
@@ -152,6 +163,7 @@ function waitForReduction(file){
     }
 }
 
+// <-- Dictionary for GLTF data structure to convert to from STL
 function gltf_dict(
     total_blength, indices_blength, vertices_boffset, vertices_blength,
     number_indices, number_vertices, minx, miny, minz, maxx, maxy, maxz,
@@ -239,7 +251,9 @@ function gltf_dict(
         ],
     } // end of dict
 }
+// Dictionary for GLTF data structure to convert to from STL -->
 
+// Make converted STL file, now GLB available (e.g. for download) via WebAssembly
 async function download_glb() {
 
     if (GLOBAL.stl_name === undefined) {
@@ -324,18 +338,23 @@ async function download_glb() {
     glb[body_offset+7] = 0x00; //
 
     let out_bin = Module['FS_readFile']('out.bin');
+    // WebAssembly finished
 
     let blob = new Blob([glb, out_bin], {type: 'application/sla'});
     let url = window.URL.createObjectURL(blob);
+
+    // Add model-viewer and Listener for logic
     document.querySelector('#model').innerHTML = '<model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>';
     
     addListener();
     
+    // Set source of model-viewer to created blob out of converting STL to GLB
     document.querySelector('#upload-gltf').src = url;
 
     loadFlag = false;
 }
 
+// Add logiv for model-viewer
 function addListener () {
     const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
     // const scaleSlider = document.querySelector('#scaleSlider');
@@ -359,8 +378,6 @@ function addListener () {
 
         metalnessDisplay.textContent = material.pbrMetallicRoughness.metallicFactor;
         roughnessDisplay.textContent = material.pbrMetallicRoughness.roughnessFactor;
-        // Change color
-        // material.pbrMetallicRoughness.setBaseColorFactor([0.7294, 0.5333, 0.0392]);
 
         document.querySelector('#metalness').addEventListener('input', (event) => {
             material.pbrMetallicRoughness.setMetallicFactor(event.target.value);
@@ -435,6 +452,7 @@ function check_file_Reduction(success_cb) {
     success_cb();
 }
 
+// Post too big STL to Reduction worker to reduce file size to max 8MB
 function post_to_worker() {
     put_status("Simplifying by your browser...");
     worker.postMessage(
@@ -445,6 +463,7 @@ function post_to_worker() {
     );
 }
 
+// Drag and Drop control
 function dodrop(event) {
     var dt = event.dataTransfer;
     var file = dt.files[0];
@@ -453,11 +472,13 @@ function dodrop(event) {
     uploaded(file);
 }
 
+// Show progress related texts in status div
 function put_status(text)
 {
     document.getElementById("status").textContent = text;
 }
 
+// Export GLB displayed by model-viewer
 async function exportGLB(){
     const modelViewer = document.getElementById("upload-gltf");
     const glTF = await modelViewer.exportScene();
@@ -468,6 +489,7 @@ async function exportGLB(){
     link.click();
 }
 
+// Create UV-Map via Blender on the Server by uploading file via AJAX call and php cmd exec
 async function createUV(){
     const modelViewer = document.getElementById("upload-gltf");
     const glTF = await modelViewer.exportScene();
@@ -485,10 +507,10 @@ async function createUV(){
     document.querySelector('#upload-gltf').src = "blender-files/models/uploads/export-"+id+".glb";
 }
 
+// AJAX call to server to insert PHP which will call include.php (with blender exec on server)
 function insertPHP(inputPath){
     const xmlhttp = new XMLHttpRequest();
         xmlhttp.onload = function() {
-        // document.getElementById("successPHP").innerHTML = this.responseText;
         put_status(this.responseText);
         return "Success";
     }
@@ -496,6 +518,7 @@ function insertPHP(inputPath){
     xmlhttp.open("GET", "include.php?inputPath=" + inputPath);
     xmlhttp.send();
 }    
+// AJAX call to upload file to server via upload.php
 async function uploadFile(file) {
     let formData = new FormData();           
     formData.append("file", file);
@@ -506,6 +529,7 @@ async function uploadFile(file) {
     return "Success";  
 }    
 
+// make (almost) unique id for proscessing on the server
 function makeid(length) {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
