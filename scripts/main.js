@@ -77,10 +77,6 @@ let GLOBAL = {
     stl_name: undefined
 };
 
-window.onload = function () {
-    // document.querySelector('#upload-gltf').src = null;
-}
-
 function uploaded(file) {
     if (file === undefined) { // via upload button
         var uploadform = document.getElementById("fileuploadform");
