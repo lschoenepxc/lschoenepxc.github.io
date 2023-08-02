@@ -7,9 +7,9 @@ self.addEventListener('message', function(e) {
 }, false);
 
 var Module = {
-    'print': function(text) {
-        self.postMessage({"log":text});
-    }
+    // 'print': function(text) {
+    //     self.postMessage({"log":text});
+    // }
 };
 
 self.importScripts("a.outReduction.js");

@@ -1,5 +1,7 @@
-`use strict`;
+// `use strict`;  // Strict mode helps you write cleaner code, like preventing you from using undeclared variables.
+
 var loadFlag = true;
+var listenerFlag = true;
 
 var worker = new Worker('scripts/workerReduction.js');
 
@@ -21,7 +23,7 @@ worker.onmessage = function(e) {
 
         waitForReduction(file);
 
-        put_status("Ready to download");
+        put_status("Waiting for UV-Map");
         return;
     }
 
@@ -77,7 +79,7 @@ let GLOBAL = {
 };
 
 window.onload = function () {
-    document.querySelector('#upload-gltf').src = '';
+    // document.querySelector('#upload-gltf').src = null;
 }
 
 function uploaded(file) {
@@ -95,7 +97,6 @@ function uploaded(file) {
         file = SIMPLIFY_FILE.blob;
 
     var uploadform = document.getElementById("fileuploadform");
-    console.log(uploadform);
     uploadform.files[0] = file;
 
     SIMPLIFY_FILE.blob = file;
@@ -331,14 +332,94 @@ async function download_glb() {
 
     let blob = new Blob([glb, out_bin], {type: 'application/sla'});
     let url = window.URL.createObjectURL(blob);
+    document.querySelector('#model').innerHTML = '<model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer>';
+    
+    addListener();
+    
     document.querySelector('#upload-gltf').src = url;
 
     loadFlag = false;
 }
 
+function addListener () {
+    const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
+    // const scaleSlider = document.querySelector('#scaleSlider');
+
+    document.querySelector('#color-controls').addEventListener('click', (event) => {
+        const colorString = event.target.dataset.color;
+        const [material] = modelViewerTexture1.model.materials;
+        material.pbrMetallicRoughness.setBaseColorFactor(colorString);
+    });
+            
+    modelViewerTexture1.addEventListener("load", () => {
+        if (loadFlag == false) {
+            createUV();
+            loadFlag = true;
+        }
+            
+        const material = modelViewerTexture1.model.materials[0];
+
+        let metalnessDisplay = document.querySelector("#metalness-value");
+        let roughnessDisplay = document.querySelector("#roughness-value");
+
+        metalnessDisplay.textContent = material.pbrMetallicRoughness.metallicFactor;
+        roughnessDisplay.textContent = material.pbrMetallicRoughness.roughnessFactor;
+        // Change color
+        // material.pbrMetallicRoughness.setBaseColorFactor([0.7294, 0.5333, 0.0392]);
+
+        document.querySelector('#metalness').addEventListener('input', (event) => {
+            material.pbrMetallicRoughness.setMetallicFactor(event.target.value);
+            metalnessDisplay.textContent = event.target.value;
+        });
+
+        document.querySelector('#roughness').addEventListener('input', (event) => {
+            material.pbrMetallicRoughness.setRoughnessFactor(event.target.value);
+            roughnessDisplay.textContent = event.target.value;
+        });
+
+
+        const createAndApplyTexture = async (channel, event) => {
+            if (event.target.value == "None") {
+                // Clears the texture.
+                material[channel].setTexture(null);
+            } else if (event.target.value) {
+                // Creates a new texture.
+                const texture = await modelViewerTexture1.createTexture(event.target.value);
+                // Applies the new texture to the specified channel.
+                if (channel.includes('base') || channel.includes('metallic')) {
+                    material.pbrMetallicRoughness[channel].setTexture(texture);
+                } 
+                else {
+                    material[channel].setTexture(texture);
+                    //material[channel].texture.source.setURI(event.options[event.selectedIndex].text);
+                            
+                    // //sampler not working, when texture None
+                    // const sampler = modelViewerTexture1.model.materials[0].normalTexture.texture.sampler;
+                    // console.log(sampler);
+
+                    // const scaleDisplay = document.querySelector('#texture-scale');
+                    // scaleDisplay.textContent = scaleSlider.value;
+
+                    // scaleSlider.addEventListener('input', (event) => {
+                    //     const scale = {
+                    //     x: scaleSlider.value,
+                    //     y: scaleSlider.value
+                    //     };
+                    //     sampler.setScale(scale);
+                    //     scaleDisplay.textContent = scale.x;
+                    // });
+                }
+            }
+        }
+
+        document.querySelector('#normals').addEventListener('input', (event) => {
+            createAndApplyTexture('normalTexture', event);
+        });
+    });
+}
+
 function check_file(file, success_cb) {
     put_status("Checking file");
-    document.getElementById("successPHP").innerHTML = '';
     const filename = file.name;
     const extension = filename.toLowerCase().slice(filename.lastIndexOf(".")+1, filename.length);
     if (extension!=="stl") {
@@ -352,8 +433,8 @@ function check_file_Reduction(success_cb) {
     put_status("Checking file");
     const filename = SIMPLIFY_FILE.name;
     const extension = filename.toLowerCase().slice(filename.lastIndexOf(".")+1, filename.length);
-    if (extension!=="stl" && extension!=="obj") {
-        put_status("Please upload an stl or obj file not "+ extension);
+    if (extension!=="stl") {
+        put_status("Please upload an stl file not "+ extension);
         return;
     }
     success_cb();
@@ -406,15 +487,14 @@ async function createUV(){
     var inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/uploads/export-"+id+".glb";
     await insertPHP(inputPath);
 
-    console.log("Now created UV Map");
-
     document.querySelector('#upload-gltf').src = "blender-files/models/uploads/export-"+id+".glb";
 }
 
 function insertPHP(inputPath){
     const xmlhttp = new XMLHttpRequest();
         xmlhttp.onload = function() {
-        document.getElementById("successPHP").innerHTML = this.responseText;
+        // document.getElementById("successPHP").innerHTML = this.responseText;
+        put_status(this.responseText);
         return "Success";
     }
     // var inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/uploads/export.glb";
