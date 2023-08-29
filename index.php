@@ -101,6 +101,7 @@ ol {
                     <option value="textures/gerillt-normal.jpg">Gerillt</option>
                     <option value="textures/PA12-normal.png">PA12</option>
                     <option value="textures/brick_normal_map.png">Brick Wall</option>
+                    <option value="textures/normal-image.png">Big Normal</option>
                 </select>
             </div>
             <div>
