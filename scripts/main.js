@@ -40,7 +40,6 @@ worker.onerror = function(e) {
         'ERROR: Line ', e.lineno, ' in ', e.filename, ': ', e.message
     );
 }
-
 // Reduction Worker via WebAssembly -->
 
 // <-- Data structure for simplifying the stl
@@ -354,16 +353,9 @@ async function download_glb() {
     loadFlag = false;
 }
 
-// Add logiv for model-viewer
+// Add logic for model-viewer
 function addListener () {
     const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
-    // const scaleSlider = document.querySelector('#scaleSlider');
-
-    document.querySelector('#color-controls').addEventListener('click', (event) => {
-        const colorString = event.target.dataset.color;
-        const [material] = modelViewerTexture1.model.materials;
-        material.pbrMetallicRoughness.setBaseColorFactor(colorString);
-    });
             
     modelViewerTexture1.addEventListener("load", () => {
         if (loadFlag == false) {
@@ -390,42 +382,44 @@ function addListener () {
         });
 
 
-        const createAndApplyTexture = async (channel, event) => {
-            if (event.target.value == "None") {
+        const createAndApplyTexture = async (channel, textVal) => {
+            if (textVal == "None") {
                 // Clears the texture.
                 material[channel].setTexture(null);
-            } else if (event.target.value) {
+            } else if (textVal) {
                 // Creates a new texture.
-                const texture = await modelViewerTexture1.createTexture(event.target.value);
+                const texture = await modelViewerTexture1.createTexture(textVal);
                 // Applies the new texture to the specified channel.
                 if (channel.includes('base') || channel.includes('metallic')) {
                     material.pbrMetallicRoughness[channel].setTexture(texture);
                 } 
                 else {
                     material[channel].setTexture(texture);
-                    //material[channel].texture.source.setURI(event.options[event.selectedIndex].text);
-                            
-                    // //sampler not working, when texture None
-                    // const sampler = modelViewerTexture1.model.materials[0].normalTexture.texture.sampler;
-                    // console.log(sampler);
-
-                    // const scaleDisplay = document.querySelector('#texture-scale');
-                    // scaleDisplay.textContent = scaleSlider.value;
-
-                    // scaleSlider.addEventListener('input', (event) => {
-                    //     const scale = {
-                    //     x: scaleSlider.value,
-                    //     y: scaleSlider.value
-                    //     };
-                    //     sampler.setScale(scale);
-                    //     scaleDisplay.textContent = scale.x;
-                    // });
                 }
             }
         }
 
         document.querySelector('#normals').addEventListener('input', (event) => {
-            createAndApplyTexture('normalTexture', event);
+            createAndApplyTexture('normalTexture', event.target.value);
+        });
+
+        document.querySelector('#color-controls').addEventListener('click', (event) => {
+            const colorString = event.target.dataset.color;
+            const [material] = modelViewerTexture1.model.materials;
+            material.pbrMetallicRoughness.setBaseColorFactor(colorString);
+        });
+
+        document.querySelector('#material-buttons').addEventListener('input', (event) => {
+            switch (event.target.value) {
+                case "PA12":
+                    createAndApplyTexture('normalTexture', 'textures/PA12-normal.png');
+                    material.pbrMetallicRoughness.setMetallicFactor(1);
+                    material.pbrMetallicRoughness.setRoughnessFactor(0);
+                    material.pbrMetallicRoughness.setBaseColorFactor("#ff0000");
+                    break;
+                default:
+                    break;
+              }
         });
     });
 }

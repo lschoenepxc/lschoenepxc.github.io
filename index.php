@@ -15,6 +15,10 @@
 
 <style>
 
+* {
+    font-family: verdana;
+}
+
 #dragAndDrop {
     height: 300px;
     white-space: pre;
@@ -32,6 +36,10 @@
     min-width:49%;
     border: 1px dashed black;
     border-radius: 10px;
+}
+
+#contains {
+    max-width: 75%;
 }
 
 #upload-gltf {
@@ -61,7 +69,7 @@ ol {
 
 <body>
     <h1>3D-View of STL-File with possible modification</h1>
-    <div>
+    <div id="contains">
         <div id="dragAndDrop"
             ondragenter="event.stopPropagation(); event.preventDefault();"
             ondragover="event.stopPropagation(); event.preventDefault();"
@@ -112,15 +120,21 @@ ol {
                 <p>Roughness: <span id="roughness-value"></span></p>
                 <input id="roughness" type="range" min="0" max="1" step="0.01" value="0">
             </div>
+            <div id="color-controls">
+                <button data-color="#969696">Grey</button>
+                <button data-color="#ff0000">Red</button>
+                <button data-color="#00ff00">Green</button>
+                <button data-color="#0000ff">Blue</button>
+            </div>
+            <div>
+                <p>Materials</p>
+                <select id="material-buttons">
+                    <option>None</option>
+                    <option value="PA12">PA12</option>
+                </select>
+            </div>
         </div>
-        <div id="color-controls">
-            <button data-color="#969696">Grey</button>
-            <button data-color="#ff0000">Red</button>
-            <button data-color="#00ff00">Green</button>
-            <button data-color="#0000ff">Blue</button>
-        </div>
-        <!-- <p>Scale: <span id="texture-scale"></span></p>
-        <input type="range" min="0.5" max="1.5" value="1" step="0.01" id="scaleSlider"> -->
+        <br/>
         <button onclick="exportGLB()">Export GLB</button>
     </div>
 </body>
