@@ -1,4 +1,4 @@
-// `use strict`;  // Strict mode helps you write cleaner code, like preventing you from using undeclared variables.
+// `use strict`;  // Strict mode helps write cleaner code, like preventing you from using undeclared variables.
 
 // console.log=function(){}; 
 
@@ -384,23 +384,6 @@ function addListener () {
             
         const material = modelViewerTexture1.model.materials[0];
 
-        let metalnessDisplay = document.querySelector("#metalness-value");
-        let roughnessDisplay = document.querySelector("#roughness-value");
-
-        metalnessDisplay.textContent = material.pbrMetallicRoughness.metallicFactor;
-        roughnessDisplay.textContent = material.pbrMetallicRoughness.roughnessFactor;
-
-        document.querySelector('#metalness').addEventListener('input', (event) => {
-            material.pbrMetallicRoughness.setMetallicFactor(event.target.value);
-            metalnessDisplay.textContent = event.target.value;
-        });
-
-        document.querySelector('#roughness').addEventListener('input', (event) => {
-            material.pbrMetallicRoughness.setRoughnessFactor(event.target.value);
-            roughnessDisplay.textContent = event.target.value;
-        });
-
-
         const createAndApplyTexture = async (channel, textVal) => {
             if (textVal == "None") {
                 // Clears the texture.
@@ -418,23 +401,19 @@ function addListener () {
             }
         }
 
-        document.querySelector('#normals').addEventListener('input', (event) => {
-            createAndApplyTexture('normalTexture', event.target.value);
-        });
-
-        document.querySelector('#color-controls').addEventListener('click', (event) => {
-            const colorString = event.target.dataset.color;
-            const [material] = modelViewerTexture1.model.materials;
-            material.pbrMetallicRoughness.setBaseColorFactor(colorString);
-        });
-
         document.querySelector('#material-buttons').addEventListener('input', (event) => {
             switch (event.target.value) {
                 case "PA12":
-                    createAndApplyTexture('normalTexture', 'textures/PA12-normal.png');
-                    material.pbrMetallicRoughness.setMetallicFactor(1);
+                    createAndApplyTexture('normalTexture', 'textures/Textur_1.jpg');
+                    material.pbrMetallicRoughness.setMetallicFactor(0.09);
+                    material.pbrMetallicRoughness.setRoughnessFactor(0.16);
+                    material.pbrMetallicRoughness.setBaseColorFactor("#f1ede9");
+                    break;
+                case "None":
+                    createAndApplyTexture('normalTexture', 'None');
+                    material.pbrMetallicRoughness.setMetallicFactor(0);
                     material.pbrMetallicRoughness.setRoughnessFactor(0);
-                    material.pbrMetallicRoughness.setBaseColorFactor("#ff0000");
+                    material.pbrMetallicRoughness.setBaseColorFactor("#969696");
                     break;
                 default:
                     break;

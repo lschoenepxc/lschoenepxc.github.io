@@ -98,40 +98,11 @@ ol {
         <div id="model">
             Nothing here yet.
         </div>
-        <!-- <model-viewer id="upload-gltf" alt="3d-View of uploaded stl" src="#" shadow-intensity="1" camera-controls touch-action="pan-y"></model-viewer> -->
         <div class="controls">
-            <div>
-                <p>Normals</p>
-                <select id="normals">
-                    <option>None</option>
-                    <option value="textures/texture-normal.jpg">Normal</option>
-                    <option value="textures/Lantern_normal.png">Lantern Pole</option>
-                    <option value="textures/gerillt-normal.jpg">Gerillt</option>
-                    <option value="textures/PA12-normal.png">PA12</option>
-                    <option value="textures/brick_normal_map.png">Brick Wall</option>
-                    <option value="textures/normal-image.png">Big Normal</option>
-                </select>
-            </div>
-            <div>
-                <p>Metalness: <span id="metalness-value"></span></p>
-                <input id="metalness" type="range" min="0" max="1" step="0.01" value="0">
-            </div>
-            <div>
-                <p>Roughness: <span id="roughness-value"></span></p>
-                <input id="roughness" type="range" min="0" max="1" step="0.01" value="0">
-            </div>
-            <div id="color-controls">
-                <button data-color="#969696">Grey</button>
-                <button data-color="#ff0000">Red</button>
-                <button data-color="#00ff00">Green</button>
-                <button data-color="#0000ff">Blue</button>
-                <button data-color="#B87333">Copper</button>
-                <button data-color="#e9f1d0">Yellowish White</button>
-            </div>
             <div>
                 <p>Materials</p>
                 <select id="material-buttons">
-                    <option>None</option>
+                    <option value="None">None</option>
                     <option value="PA12">PA12</option>
                 </select>
             </div>

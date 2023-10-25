@@ -42,7 +42,8 @@ bpy.ops.mesh.select_all(action='SELECT')
 # Call the smart project operator
 bpy.ops.uv.smart_project(island_margin=0.008)
 # Scale UV-Map
-bpy.ops.uv.muv_world_scale_uv_apply_manual(tgt_density=250, tgt_texture_size=(2376, 1584), origin='CENTER', show_dialog=False, tgt_area_calc_method='MESH', only_selected=True)
+#bpy.ops.uv.muv_world_scale_uv_apply_manual(tgt_density=250, tgt_texture_size=(2376, 1584), origin='CENTER', show_dialog=False, tgt_area_calc_method='MESH', only_selected=True)
+bpy.ops.uv.muv_world_scale_uv_apply_manual(tgt_density=208.12, tgt_texture_size=(8000, 6000), origin='CENTER', show_dialog=False, tgt_area_calc_method='MESH', only_selected=True)
 print("Scales UV")
 # UVW Mapping
 # bpy.ops.uv.muv_uvw_best_planer_map(assign_uvmap=True)
