@@ -1,5 +1,22 @@
 // `use strict`;  // Strict mode helps you write cleaner code, like preventing you from using undeclared variables.
 
+// console.log=function(){}; 
+
+window.onload = function () {
+    // Append a.out.js for file conversion from stl to glb
+    var script_wasm_async= document.createElement('script');
+    script_wasm_async.async = true;
+    script_wasm_async.type= 'text/javascript';
+    script_wasm_async.src= 'scripts/a.out.js';
+    document.head.appendChild(script_wasm_async);
+    
+    // Append model-viewer.min.js for modelviewer component
+    var script_modelviewer= document.createElement('script');
+    script_modelviewer.type= 'module';
+    script_modelviewer.src= 'scripts/model-viewer.min.js';
+    document.head.appendChild(script_modelviewer);
+    
+};
 
 // flag to indicate, that uploading to server and creating UV Map is necessary
 var loadFlag = true;
@@ -87,7 +104,7 @@ let GLOBAL = {
 };
 // Global data structure for uploaded stl file -->
 
-function uploaded(file) {
+function uploaded(file) {    
     if (file === undefined) { // via upload button
         var uploadform = document.getElementById("fileuploadform");
         file = uploadform.files[0];
@@ -356,6 +373,8 @@ async function download_glb() {
 // Add logic for model-viewer
 function addListener () {
     const modelViewerTexture1 = document.querySelector("model-viewer#upload-gltf");
+    //modelViewerTexture1.environmentImage = 'legacy';
+    //modelViewerTexture1.environmentImage = '';
             
     modelViewerTexture1.addEventListener("load", () => {
         if (loadFlag == false) {
@@ -440,7 +459,7 @@ function check_file_Reduction(success_cb) {
     const filename = SIMPLIFY_FILE.name;
     const extension = filename.toLowerCase().slice(filename.lastIndexOf(".")+1, filename.length);
     if (extension!=="stl") {
-        put_status("Please upload an stl file not "+ extension);
+        put_status("Please upload a stl file not "+ extension);
         return;
     }
     success_cb();
@@ -491,7 +510,7 @@ async function createUV(){
     const file = new File([glTF], "export-" + id + ".glb");
     
     // If file size > 8 MB, then no upload
-    // console.log(file.size);
+    //console.log(file.size);
 
     await uploadFile(file);
 
@@ -509,7 +528,7 @@ function insertPHP(inputPath){
         return "Success";
     }
     // var inputPath = "C:/Users/CXJKCS/Dev/Protiq/lschoenepxc.github.io/blender-files/models/uploads/export.glb";
-    xmlhttp.open("GET", "include.php?inputPath=" + inputPath);
+    xmlhttp.open("GET", "uv_map.php?inputPath=" + inputPath);
     xmlhttp.send();
 }    
 // AJAX call to upload file to server via upload.php

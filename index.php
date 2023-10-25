@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<script async type="text/javascript" src="scripts/a.out.js"></script>
+<!-- Scripts now being added to the head tag in the main.js window.onload function-->
+
+<!-- <script async type="text/javascript" src="scripts/a.out.js"></script> -->
+<!-- Import the modelviewer component -->
+<!-- <script type="module" src="scripts/model-viewer.min.js"></script> -->
 
 <script type="text/javascript" src="scripts/main.js"></script>
-
-<!-- Import the modelviewer component -->
-<!-- <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script> -->
-<script type="module" src="scripts/model-viewer.min.js"></script>
 
 <style>
 
@@ -125,6 +125,8 @@ ol {
                 <button data-color="#ff0000">Red</button>
                 <button data-color="#00ff00">Green</button>
                 <button data-color="#0000ff">Blue</button>
+                <button data-color="#B87333">Copper</button>
+                <button data-color="#e9f1d0">Yellowish White</button>
             </div>
             <div>
                 <p>Materials</p>

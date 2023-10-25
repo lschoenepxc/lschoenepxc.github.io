@@ -29,7 +29,7 @@ bpy.ops.object.delete()
             
 bpy.ops.import_scene.gltf(filepath=inputPath)
 
-obj = bpy.context.object.children[0]
+obj = bpy.context.object.children[0].children[0]
 
 # Select each object
 obj.select_set(True)
